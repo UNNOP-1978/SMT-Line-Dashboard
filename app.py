@@ -4,19 +4,15 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
-from pyngrok import ngrok
+
 
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
 # Ngrok Tunnel
-try:
-    public_url = ngrok.connect(8050)
-    print("🌐 Dash URL:", public_url)
-except Exception as e:
-    print(f"Failed to start ngrok tunnel: {e}")
-    public_url = "http://localhost:8050"
+
+   public_url = "http://localhost:8050"
 
 # ---------------- DATA ----------------
 
