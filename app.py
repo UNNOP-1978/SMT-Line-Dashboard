@@ -5,25 +5,17 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 
-
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+# Expose the server variable for gunicorn
 server = app.server
 
-# Ngrok Tunnel
-
-   public_url = "http://localhost:8050"
-
 # ---------------- DATA ----------------
+# Load data using relative paths for deployment
+df_m12 = pd.read_csv("Load In Line12.csv", on_bad_lines='skip')
+df_alarm = pd.read_csv("Logging_M12 Alarm.csv", on_bad_lines='skip')
 
-# --- START: EDIT THIS SECTION ---
-# M12 Main Data
-df_m12 = pd.read_csv(r"C:\Users\Unnop\OneDrive - STANLEY ELECTRIC CO., LTD\OEE project\Load In Line12.csv", on_bad_lines='skip')
-
-# Alarm Data
-df_alarm = pd.read_csv(r"C:\Users\Unnop\OneDrive - STANLEY ELECTRIC CO., LTD\OEE project\Logging_M12 Alarm.csv", on_bad_lines='skip')
-# --- END: EDIT THIS SECTION ---
-
+# Data Processing (same as before)
 df_m12["DATE"] = pd.to_datetime(df_m12["DATE"], dayfirst=True, errors="coerce")
 df_m12 = df_m12.dropna(subset=["DATE"])
 df_m12["PROGRAM NAME"] = df_m12["PROGRAM NAME"].astype(str).str.strip()
@@ -90,9 +82,6 @@ app.index_string = '''
         .top-buttons {
             display: flex; justify-content: space-between; margin-bottom: 10px;
         }
-        /* Dropdown styling, applied globally in this version based on your last provided code.
-           If you want it only for Page 2, uncomment the style block in m12_dashboard_layout
-           and remove this block from app.index_string. */
         .dash-dropdown div[class*="control"],
         .dash-dropdown div[class*="menu"],
         .dash-dropdown div[class*="singleValue"],
@@ -112,7 +101,7 @@ app.index_string = '''
 </html>
 '''
 
-# ---------------- Page Layout ----------------
+# ---------------- Page Layout (same as before) ----------------
 
 # หน้า 1: Layout Mounter
 mounter_layout = {
@@ -190,7 +179,7 @@ app.layout = html.Div([
     html.Div(id='page-content')
 ])
 
-# ---------------- Routing ----------------
+# ---------------- Routing (same as before) ----------------
 @app.callback(Output('page-content', 'children'),
               Input('url', 'pathname'))
 def render_page(pathname):
@@ -198,7 +187,7 @@ def render_page(pathname):
     elif pathname == "/M12/oee": return m12_oee_dashboard_layout
     else: return index_page
 
-# ---------------- Callbacks for M12 Dashboard ----------------
+# ---------------- Callbacks (same as before) ----------------
 @app.callback(
     Output("bar_horizontal", "figure"),
     Output("bar_month", "figure"),
@@ -263,21 +252,20 @@ def update_m12_dashboard_graphs(year, month, week, weekday, day, model):
 
     return fig1, fig2, fig3, fig4, fig5, t.to_dict("records"), [{"name": i, "id": i} for i in t.columns]
 
-# ---------------- Callbacks for M12 OEE Dashboard ----------------
+
 @app.callback(
     Output("mttr_daily", "figure"),
     Output("mttr_weekly", "figure"),
     Output("mttr_monthly", "figure"),
     Output("mttr_yearly", "figure"),
     Output("pie_fault", "figure"),
-    Input("url", "pathname") # Using pathname as input to trigger on page load
+    Input("url", "pathname")
 )
 def update_oee_dashboard_graphs(pathname):
     if pathname != "/M12/oee":
-        # Return empty figures if not on the OEE page to avoid errors
         return {}, {}, {}, {}, {}
 
-    df_group = df_alarm.copy() # Use df_alarm here
+    df_group = df_alarm.copy()
 
     daily = df_group.groupby("Day")["DURATION(min)"].mean().reset_index()
     fig1 = px.bar(daily, x="Day", y="DURATION(min)", title="MTTR by Day", text="DURATION(min)", template="plotly_dark")
@@ -305,6 +293,4 @@ def update_oee_dashboard_graphs(pathname):
 
     return fig1, fig2, fig3, fig4, fig5
 
-# ---------------- Run ----------------
-if __name__ == '__main__':
-    app.run()
+# No app.run() block needed for deployment with gunicorn
